@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MaleSpace</title>
+</head>
+<body style="background:black;color:white;font-family:Arial">
+
+<h1>MALESPACE</h1>
+
+<input id="title" placeholder="Title">
+<input type="file" id="file">
+<button onclick="upload()">Upload</button>
+
+<div id="videos"></div>
+
+<script>
+const API = "";
+
+async function upload(){
+  const file = document.getElementById("file").files[0];
+  const title = document.getElementById("title").value;
+
+  const formData = new FormData();
+  formData.append("video", file);
+  formData.append("title", title);
+
+  await fetch("/upload",{method:"POST",body:formData});
+  load();
+}
+
+async function load(){
+  const res = await fetch("/videos");
+  const videos = await res.json();
+
+  document.getElementById("videos").innerHTML = videos.map(v=>`
+    <div>
+      <h3>${v.title}</h3>
+      <video src="${v.url}" controls width="300"></video>
+      <br>
+      <button onclick="react(${v.id},'like')">C*M ${v.likes}</button>
+      <button onclick="react(${v.id},'dislike')">NO*** ${v.dislikes}</button>
+      <br>
+      <input id="c-${v.id}">
+      <button onclick="comment(${v.id})">Comment</button>
+      <div>${v.comments.join("<br>")}</div>
+    </div>
+  `).join("");
+}
+
+async function react(id,type){
+  await fetch("/react/"+id,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({type})
+  });
+  load();
+}
+
+async function comment(id){
+  const text=document.getElementById("c-"+id).value;
+
+  await fetch("/comment/"+id,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({text})
+  });
+
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
